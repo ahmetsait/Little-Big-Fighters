@@ -1,3 +1,6 @@
+# SPIR-V Shader Bytecodes
+*.spv
+
 # Build Directories
 [Bb]in
 
