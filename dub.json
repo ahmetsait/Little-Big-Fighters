@@ -1,0 +1,45 @@
+{
+	"name": "little-big-fighters",
+	"authors": [ "Ahmet Sait" ],
+	"description": "2D fighting game inspired by LF2",
+	"copyright": "Copyright © 2020, Ahmet Sait",
+	"license": "MIT",
+	"sourcePaths": ["src"],
+	"importPaths": ["src"],
+	"mainSourceFile": "src/app.d",
+	"targetType": "executable",
+	"targetPath": "bin/$BUILD_TYPE-$PLATFORM-$ARCH",
+	"targetName": "lbf",
+	"dependencies": {
+		"erupted": "~>2.0.50",
+		"bindbc-sdl": "~>0.13.0",
+		"bindbc-freetype": "~>0.8.0",
+		"bindbc-freeimage": "~>0.3.2",
+		"bindbc-harfbuzz": "~>0.2.1",
+		"emsi_containers": "~>0.7.0",
+		"gfm:math": "~>8.0.2",
+		"asdf": "~>0.5.3",
+	},
+	"copyFiles-windows-x86" : ["lib/*.dll"],
+	"copyFiles-windows-x86_64" : ["lib64/*.dll"],
+	"versions": [
+		"SDL_2010",
+		"FT_210",
+		"FI_318",
+		"HB_1_7_2",
+		"HB_with_freetype",
+	],
+	"configurations" : [
+		{
+			"name": "debug",
+		},
+		{
+			"name": "release",
+			"platforms": ["windows"],
+			"lflags": ["/SUBSYSTEM:WINDOWS"],
+			"versions": [
+				"WinMain",
+			],
+		},
+	]
+}
