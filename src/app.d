@@ -6,20 +6,7 @@ import std.string : fromStringz, toStringz;
 
 import bindbc.sdl.config;
 import bindbc.sdl.dynload;
-import bindbc.sdl.bind.sdlvideo;
-import bindbc.sdl.bind.sdlvulkan;
-
-import bindbc.freeimage.types;
-import bindbc.freeimage.binddynamic;
-
-import bindbc.freetype.config;
-import bindbc.freetype.dynload;
-
-import bindbc.hb.config;
-import bindbc.hb.dynload;
-
-import erupted;
-import loader = erupted.vulkan_lib_loader;
+import bindbc.sdl.bind.sdl;
 
 import lbf.core;
 
@@ -82,14 +69,20 @@ int Main(string[] args)
 	}
 	debug writeln("Done.");
 	
-	//debug write("Loading FreeImage... ");
-	//if (loadFreeImage() < FISupport.fi318)
-	//{
-	//	writeln("Failed to load FreeImage library.");
-	//	return 1;
-	//}
-	//debug writeln("Done.");
+	import bindbc.freeimage.types;
+	import bindbc.freeimage.binddynamic;
 	
+	debug write("Loading FreeImage... ");
+	if (loadFreeImage() < FISupport.fi318)
+	{
+		writeln("Failed to load FreeImage library.");
+		return 1;
+	}
+	debug writeln("Done.");
+	
+	//import bindbc.freetype.config;
+	//import bindbc.freetype.dynload;
+	//
 	//debug write("Loading FreeType... ");
 	//FTSupport ft = loadFreeType();
 	//if (ft != ftSupport)
@@ -102,6 +95,9 @@ int Main(string[] args)
 	//}
 	//debug writeln("Done.");
 	
+	//import bindbc.hb.config;
+	//import bindbc.hb.dynload;
+	//
 	//debug write("Loading HarfBuzz... ");
 	//if (loadHarfBuzz() < HBSupport.v1_7_2)
 	//{
@@ -110,24 +106,20 @@ int Main(string[] args)
 	//}
 	//debug writeln("Done.");
 	
-	debug write("Loading Vulkan... ");
-	typeof(vkGetInstanceProcAddr) vkLoad;
-	if (loader.loadVulkanLib() == false ||
-		(vkLoad = loader.loadGetInstanceProcAddr()) == null)
-	{
-		writeln("Failed to load Vulkan library.");
-		return 1;
-	}
-	loadGlobalLevelFunctions(vkLoad);
-	debug writeln("Done...");
+	//import erupted;
+	//import loader = erupted.vulkan_lib_loader;
+	//
+	//debug write("Loading Vulkan... ");
+	//typeof(vkGetInstanceProcAddr) vkLoad;
+	//if (loader.loadVulkanLib() == false ||
+	//	(vkLoad = loader.loadGetInstanceProcAddr()) == null)
+	//{
+	//	writeln("Failed to load Vulkan library.");
+	//	return 1;
+	//}
+	//loadGlobalLevelFunctions(vkLoad);
+	//debug writeln("Done...");
 	//endregion
-	
-	import bindbc.sdl.bind.sdl;
-	
-	debug write("Initializing SDL... ");
-	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_EVENTS)
-		.enforceSDLNotNegative("Cannot initialize SDL.");
-	debug writeln("Done.");
 	
 	{
 		import lbf.game;
@@ -140,7 +132,7 @@ int Main(string[] args)
 	import lbf.gamedata;
 	import std.file : write;
 	auto ch = new CharData();
-	//write("kek.json", serializeToJsonPretty(ch));
+	write("kek.json", serializeToJsonPretty(ch));
 	
 	SDL_Quit();
 	debug writeln("Terminated SDL library.");

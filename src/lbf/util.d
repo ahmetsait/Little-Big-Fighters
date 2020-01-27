@@ -4,12 +4,44 @@ import std.range;
 import std.string : indexOf, lastIndexOf;
 import std.traits;
 
-public RLock!T rlock(T)(ref T ptr)
+import lbf.math.rectangle;
+import lbf.graphics.opengl.gl.gl;
+import bindbc.sdl.bind.sdlvideo;
+
+Rectangle!int glSubWindow(Rectangle!int area, int width, int height)
+{
+	Rectangle!int current;
+	glGetIntegerv(GL_VIEWPORT, cast(int*)&current);
+	Rectangle!int corrected = Rectangle!int(current.x, height - current.y - current.height, current.width, current.height);
+	
+	area.left = area.left < 0 ? 0 : area.left;
+	area.top = area.top < 0 ? 0 : area.top;
+	area.width = area.right + corrected.left > corrected.right ? corrected.right - (corrected.left + area.left) : area.width;
+	area.width = area.width < 0 ? 0 : area.width;
+	area.height = area.bottom + corrected.top > corrected.bottom ? corrected.bottom - (corrected.top + area.top) : area.height;
+	area.height = area.height < 0 ? 0 : area.height;
+	int y = height - area.y - area.height;
+	Rectangle!int sub = Rectangle!int(area.x, y, area.width, area.height);
+	glViewport(sub.x, sub.y, sub.width, sub.height);
+	glScissor(sub.x, sub.y, sub.width, sub.height);
+	
+	return area;
+}
+
+Rectangle!int glResetSubWindow(int width, int height)
+{
+	glViewport(0, 0, width, height);
+	glScissor(0, 0, width, height);
+	
+	return Rectangle!int(0, 0, width, height);
+}
+
+RLock!T rlock(T)(ref T ptr)
 {
 	return RLock!(T)(&ptr);
 }
 
-public struct RLock(T) 
+struct RLock(T) 
 {
 	@disable this();
 	@disable this(this);
@@ -82,7 +114,7 @@ unittest
 enum bool isIterableReverse(T) = is(typeof({ foreach_reverse (elem; T.init) {} }));
 
 ///Returns index of the first element that is equal to the value in the given iterable range.
-public bool contains(Range, E)(Range haystack, E needle)
+bool contains(Range, E)(Range haystack, E needle)
 	if(isIterable!Range && is(Unqual!E : Unqual!(ElementType!Range)))
 {
 	foreach(element; haystack)
@@ -92,7 +124,7 @@ public bool contains(Range, E)(Range haystack, E needle)
 }
 
 ///Returns index of the first element that is equal to the value in the given iterable range.
-public sizediff_t indexOf(Range, E)(Range haystack, E needle)
+sizediff_t indexOf(Range, E)(Range haystack, E needle)
 	if(isIterable!Range && is(Unqual!E : Unqual!(ElementType!Range)))
 {
 	sizediff_t i = 0;
@@ -105,7 +137,7 @@ public sizediff_t indexOf(Range, E)(Range haystack, E needle)
 }
 
 ///Returns index of the last element that is equal to the value in the given iterable range.
-public sizediff_t lastIndexOf(Range, E)(Range haystack, E needle)
+sizediff_t lastIndexOf(Range, E)(Range haystack, E needle)
 	if(is(Unqual!(ElementType!Range) == Unqual!E) && (isIterableReverse!Range || isIterable!Range))
 {
 	static if(isIterableReverse!Range)

@@ -1,359 +1,521 @@
 module lbf.gamedata;
 
-import asdf;
+import std.traits;
+
+import asdf.serialization;
+import bindbc.freeimage.types;
 import gfm.math.vector;
 
-public final class DataFiles
-{
-	public string[int] CharDataFiles;
-	public string[int] MapFiles;
-}
+import lbf.math;
+import lbf.math.rectangle;
+import lbf.graphics.opengl;
 
-@serializedAs!(int)
-public struct Key(T)
+//region Proxies
+struct colorProxy
 {
-	alias key this;
 	union
 	{
-		int key;
-		T val;
+		struct
+		{
+			float r, g, b, a;
+		}
+		@serializationIgnore
+		vec4f v;
+	}	
+	
+	this(vec4f v)
+	{
+		this.v = v;
 	}
 	
-	this(int key)
+	vec4f opCast(T : vec4f)()
 	{
-		this.key = key;
-	}
-	
-	int opCast(T : int)()
-	{
-		return key;
+		return this.v;
 	}
 }
 
-public struct vec3fProxy
+struct vec4fProxy
 {
-	public float x, y, z;
+	union
+	{
+		struct
+		{
+			float x, y, z, w;
+		}
+		@serializationIgnore
+		vec4f v;
+	}	
+	
+	this(vec4f v)
+	{
+		this.v = v;
+	}
+	
+	vec4f opCast(T : vec4f)()
+	{
+		return this.v;
+	}
+}
+
+struct vec3fProxy
+{
+	union
+	{
+		struct
+		{
+			float x, y, z;
+		}
+		@serializationIgnore
+		vec3f v;
+	}	
 	
 	this(vec3f v)
 	{
-		x = v.x;
-		y = v.y;
-		z = v.z;
+		this.v = v;
 	}
 	
 	vec3f opCast(T : vec3f)()
 	{
-		vec3f v;
-		v.x = this.x;
-		v.y = this.y;
-		v.z = this.z;
-		return v;
+		return this.v;
 	}
 }
 
-public struct vec2iProxy
+struct vec3iProxy
 {
-	public int x, y;
+	union
+	{
+		struct
+		{
+			int x, y, z;
+		}
+		@serializationIgnore
+		vec3i v;
+	}	
+	
+	this(vec3i v)
+	{
+		this.v = v;
+	}
+	
+	vec3i opCast(T : vec3i)()
+	{
+		return this.v;
+	}
+}
+
+struct vec2fProxy
+{
+	union
+	{
+		struct
+		{
+			float x, y;
+		}
+		@serializationIgnore
+		vec2f v;
+	}	
+	
+	this(vec2f v)
+	{
+		this.v = v;
+	}
+	
+	vec2f opCast(T : vec2f)()
+	{
+		return this.v;
+	}
+}
+
+struct vec2iProxy
+{
+	union
+	{
+		struct
+		{
+			int x, y;
+		}
+		@serializationIgnore
+		vec2i v;
+	}	
 	
 	this(vec2i v)
 	{
-		x = v.x;
-		y = v.y;
+		this.v = v;
 	}
 	
 	vec2i opCast(T : vec2i)()
 	{
-		vec2i v;
-		v.x = this.x;
-		v.y = this.y;
-		return v;
+		return this.v;
 	}
 }
 
-public final class CharData
+struct Dimension
 {
-	public string name;
-	public Charge hp = { amount: 500, max: 500, regen: 1.0f / 12 };
-	public Charge mp = { amount: 250, max: 500, regen: 1.0f / 3 };
-	public float mpRegenFactor = 5;
-	public Charge armor;
-	public Charge fall = { amount: 60, max: 60, regen: 1f };
-	public Charge defend = { amount: 60, max: 60, regen: 1f };
-	@serializedAs!vec2iProxy
-	public vec2i center;
-	public float weight = 1;
 	union
 	{
+		struct
+		{
+			int rowCount, colCount, width, height;
+		}
 		@serializationIgnore
-		public Frame[] injuredFrames;
-		public int[] injuredIndices;
+		vec4i v;
 	}
-	//public int[] caughtIndices;
-	union
-	{
-		@serializationIgnore
-		public Frame dizzyFrame;
-		public int dizzyIndex;
-	}
-	union
-	{
-		@serializationIgnore
-		public Frame landingFrame;
-		public int landingIndex;
-	}
-	union
-	{
-		@serializationIgnore
-		public Frame breakDefendFrame;
-		public int breakDefendIndex;
-	}
-	union
-	{
-		@serializationIgnore
-		public Frame heavyStopFrame;
-		public int heavyStopIndex;
-	}
-	union
-	{
-		@serializationIgnore
-		public Frame flyFrontFrame;
-		public int flyFrontIndex;
-	}
-	union
-	{
-		@serializationIgnore
-		public Frame fallFrontFrame;
-		public int fallFrontIndex;
-	}
-	union
-	{
-		@serializationIgnore
-		public Frame flyBackFrame;
-		public int flyBackIndex;
-	}
-	union
-	{
-		@serializationIgnore
-		public Frame fallBackFrame;
-		public int fallBackIndex;
-	}
-	union
-	{
-		@serializationIgnore
-		public Frame startFrame;
-		public int startIndex;
-	}
-	public Charge[] charges;
-	@serializedAs!(CharFrame[int])
-	public CharFrame[int] frames;
 	
-	public this()
+	this(vec4i v)
 	{
-		injuredIndices = [ int(50), int(51), int(52) ];
-		frames = [
-			int(1): new CharFrame(),
+		this.v = v;
+	}
+	
+	vec4i opCast(T : vec4i)()
+	{
+		return this.v;
+	}
+}
+//endregion
+
+struct DataFiles
+{
+	string[] characterFiles;
+	string[] weaponFiles;
+	string[] energyFiles;
+	string[] particleFiles;
+	string[] mapFiles;
+	string[string] soundFiles;
+}
+
+final class CharData
+{
+	string name;
+	
+	string face;
+	string small;
+	
+	string[] sprites;
+	Dimension[] dimensions;
+	@serializationIgnore
+	FIBITMAP[] bitmaps;
+	@serializationIgnore
+	SizeI[] sizes;
+	@serializationIgnore
+	Texture[] textures;
+	
+	Charge[string] charges;
+	
+	this()
+	{
+		charges = [
+			"hp":		Charge(500, 500, 0.125, 3),
+			"darkHp":	Charge(0, 500, 0),
+			// Decrease mp regen when hp is high
+			"mp":		Charge(250, 500, 3, 3, null, "hp", 0.5f / 100, Operation.Substraction),
+			"armor":	Charge(),
+			"fall":		Charge(60, 60, 0.5, 1),
+			"resist":	Charge(60, 60, 0.5, 1),
 		];
 	}
+	
+	float weight = 1;
+	
+	@serializationIgnore
+	CharFrame injuredFrame;
+	@serializationKeys(injuredFrame.stringof)
+	int injuredIndex;
+	
+	//@serializationIgnore
+	//CharFrame caughtFrame;
+	//@serializationKeys(caughtFrame.stringof)
+	//int caughtIndex;
+	
+	@serializationIgnore
+	CharFrame dizzyFrame;
+	@serializationKeys(dizzyFrame.stringof)
+	int dizzyIndex;
+	
+	@serializationIgnore
+	CharFrame landingFrame;
+	@serializationKeys(landingFrame.stringof)
+	int landingIndex;
+	
+	@serializationIgnore
+	CharFrame brokenDefenseFrame;
+	@serializationKeys(brokenDefenseFrame.stringof)
+	int brokenDefenseIndex;
+	
+	//@serializationIgnore
+	//CharFrame heavyStopFrame;
+	//@serializationKeys(heavyStopFrame.stringof)
+	//int heavyStopIndex;
+	
+	@serializationIgnore
+	CharFrame flyFrontFrame;
+	@serializationKeys(flyFrontFrame.stringof)
+	int flyFrontIndex;
+	
+	@serializationIgnore
+	CharFrame fallFrontFrame;
+	@serializationKeys(fallFrontFrame.stringof)
+	int fallFrontIndex;
+	
+	@serializationIgnore
+	CharFrame flyBackFrame;
+	@serializationKeys(flyBackFrame.stringof)
+	int flyBackIndex;
+	
+	@serializationIgnore
+	CharFrame fallBackFrame;
+	@serializationKeys(fallBackFrame.stringof)
+	int fallBackIndex;
+	
+	@serializationIgnore
+	CharFrame groundBackFrame;
+	@serializationKeys(groundBackFrame.stringof)
+	int groundBackIndex;
+	
+	@serializationIgnore
+	CharFrame groundFrontFrame;
+	@serializationKeys(groundFrontFrame.stringof)
+	int groundFrontIndex;
+	
+	CharFrame[int] frames;
 }
 
-public class Frame
+final class CharFrame
 {
-	public string name;
-}
-
-public final class CharFrame : Frame
-{
-	public int pic;
-	public State state;
+	string name;
+	Display[] pics;
+	State state;
 	@serializedAs!vec3fProxy
-	public vec3f vector;
-	public VectorHint vectorHint;
+	vec3f velocity = vec3f(0, 0, 0);
+	Operation velocityOp;
 	@serializedAs!vec3fProxy
-	public vec3f controlledVelocity;
-	public int wait;
-	public ushort defending;
-	public bool dirControl;
-	union
-	{
-		@serializationIgnore
-		public Frame nextFrame;
-		public int nextIndex;
-	}
-	union
-	{
-		@serializationIgnore
-		public Frame injuredFrame;
-		public int injuredIndex;
-	}
-	union
-	{
-		@serializationIgnore
-		public Frame dizzyFrame;
-		public int dizzyIndex;
-	}
-	union
-	{
-		@serializationIgnore
-		public Frame landingFrame;
-		public int landingIndex;
-	}
-	union
-	{
-		@serializationIgnore
-		public Frame breakDefendFrame;
-		public int breakDefendIndex;
-	}
-	union
-	{
-		@serializationIgnore
-		public Frame stopFrame;
-		public int stopIndex;
-	}
-	public Timer timer;
-	public Charger[] chargers;
-	public GameKeyEvent[] gameKeyEvents;
+	vec3f controlledVelocity = vec3f(0, 0, 0);
+	int wait;
+	ushort defending;
+	bool dirControl;
+	
+	@serializationIgnore
+	CharFrame nextFrame;
+	@serializationKeys(nextFrame.stringof)
+	int nextIndex;
+	
+	@serializationIgnore
+	CharFrame injuredFrame;
+	@serializationKeys(injuredFrame.stringof)
+	int injuredIndex;
+	
+	@serializationIgnore
+	CharFrame dizzyFrame;
+	@serializationKeys(dizzyFrame.stringof)
+	int dizzyIndex;
+	
+	@serializationIgnore
+	CharFrame landingFrame;
+	@serializationKeys(landingFrame.stringof)
+	int landingIndex;
+	
+	@serializationIgnore
+	CharFrame brokenDefenseFrame;
+	@serializationKeys(brokenDefenseFrame.stringof)
+	int brokenDefenseIndex;
+	
+	@serializationIgnore
+	CharFrame stopFrame;
+	@serializationKeys(stopFrame.stringof)
+	int stopIndex;
+	
+	Charger[] chargers;
+	Spawn[] spawns;
+	KeyEvent atk;
+	KeyEvent jmp;
+	KeyEvent def;
 }
 
-public final class MapData
+struct Display
 {
-	public string name;
-	//public SpriteSheet[] spriteSheets;
-	//public SpriteFrame[] spriteFrames;
-	public int width;
-	public int zPlace;
-	public int zWidth;
-	public float staticFrictionFactor = 1f;
-	public float dynamicfrictionFactor = 0.8f;
-	public Charge[] charges;
-	public MapFrame[int] mapFrames;
+	int index;
+	int row, col;
+	@serializedAs!vec2iProxy
+	vec2i offset;
+	float rotation = 0;
+	@serializedAs!vec2fProxy
+	vec2f scale = vec2f(1, 1);
+	@serializedAs!colorProxy
+	vec4f color = vec4f(1, 1, 1, 1);
 }
 
-public final class MapFrame : Frame
+final class MapData
 {
-	public int wait;
-	union
-	{
-		@serializationIgnore
-		public Frame nextFrame;
-		public int nextIndex;
-	}
-	public Charger[] chargers;
-	public MapLayer[] mapLayers;
+	string name;
+	
+	string[] sprites;
+	Dimension[] dimensions;
+	@serializationIgnore
+	FIBITMAP[] bitmaps;
+	@serializationIgnore
+	SizeI[] sizes;
+	@serializationIgnore
+	Texture[] textures;
+	
+	int width;
+	int zPlace;
+	int zWidth;
+	float staticFrictionFactor = 1f;
+	float dynamicfrictionFactor = 0.8f;
+	MapLayer[] layers;
+	Charge[] charges;
+	MapFrame[int] mapFrames;
 }
 
-public final class MapLayer
+final class MapFrame
 {
-	public int x;
-	public int y;
-	public int z;
-	public int pic;
+	string name;
+	int wait;
+	@serializationIgnore
+	MapFrame nextFrame;
+	@serializationKeys(nextFrame.stringof)
+	int nextIndex;
+	Charger[] chargers;
+	MapLayer[] mapLayers;
 }
 
-public struct Charge
+struct MapLayer
 {
-	public float amount = 0;
-	public float regen = 0;
-	public float max = 0;
+	int x;
+	int y;
+	int z;
+	Display pic;
+	int loop;
+	float distance;
 }
 
-public struct Charger
+struct Charge
 {
-	public int charge;
-	public float amount = 0;
-	union
-	{
-		@serializationIgnore
-		public Frame chargeLowFrame;
-		public int chargeLowIndex;
-	}
-	union
-	{
-		@serializationIgnore
-		public Frame chargeFullFrame;
-		public int chargeFullIndex;
-	}
-	public bool forceUsage;
+	float amount = 0;
+	float max = 0;
+	float regen = 0;
+	int regenWait = 2;
+	
+	@serializationIgnore
+	Charge* regenParam;
+	@serializationKeys(regenParam.stringof)
+	string regenParamName;
+	
+	float paramFactor = float.nan;
+	Operation paramOp;
+	float paramWaitFactor = float.nan;
+	Operation paramWaitOp;
+	
+	@serializedAs!colorProxy
+	vec4f color;
+	float segment = 0;
+	
+	@serializationIgnore
+	CharFrame chargeZeroFrame;
+	@serializationKeys(chargeZeroFrame.stringof)
+	int chargeZeroIndex;
+	
+	@serializationIgnore
+	CharFrame chargeFullFrame;
+	@serializationKeys(chargeFullFrame.stringof)
+	int chargeFullIndex;
 }
 
-public struct Spawn
+struct Charger
 {
-	public ObjectType objectType;
-	public int objectId;
+	@serializationIgnore
+	Charge* charge;
+	@serializationKeys(charge.stringof)
+	string chargeName;
+	
+	float amount = 0;
+	Operation op;
+	
+	@serializationIgnore
+	CharFrame chargeLowFrame;
+	@serializationKeys(chargeLowFrame.stringof)
+	int chargeLowIndex;
+	
+	@serializationIgnore
+	CharFrame chargeFullFrame;
+	@serializationKeys(chargeFullFrame.stringof)
+	int chargeFullIndex;
+	
+	bool forceUsageLow;
+	bool forceUsageHigh;
+	bool forceChargeLow;
+	bool forceChargeHigh;
+}
+
+struct Spawn
+{
+	@serializationIgnore
+	Object obj;
+	string name;
 	@serializedAs!vec3fProxy
-	{
-		public vec3f position;
-		public vec3f velocity;
-		public vec3f controlledVelocity;
-	}
-}
-
-public struct WeaponPoint
-{
-	public int x;
-	public int y;
-	public float angle;
+	vec3f position = vec3f(0, 0, 0);
 	@serializedAs!vec3fProxy
-	public vec3f velocity;
-	public int atkType;
-	public bool cover;
+	vec3f velocity = vec3f(0, 0, 0);
+	@serializedAs!vec3fProxy
+	vec3f controlledVelocity;
 }
 
-public enum ObjectType
+struct WeaponPoint
+{
+	@serializedAs!vec2iProxy
+	vec2i offset;
+	float angle = 0;
+	@serializedAs!vec3fProxy
+	vec3f velocity = vec3f(0, 0, 0);
+	int attackIndex;
+	bool cover;
+}
+
+enum ObjectType
 {
 	Char,
 	Weapon,
-	HeavyWeapon,
-	Chunk,
 	Energy,
-	Drink
+	Particle,
 }
 
-public struct GameKeyStates
+struct KeyStatePack
 {
-	public KeyState up;
-	public KeyState down;
-	public KeyState right;
-	public KeyState left;
-	public KeyState jump;
-	public KeyState attack;
-	public KeyState defend;
+	KeyState up;
+	KeyState down;
+	KeyState right;
+	KeyState left;
+	KeyState jump;
+	KeyState attack;
+	KeyState defend;
 }
 
-public struct GameKeyEvent
+struct KeyEvent
 {
-	public int frameToGo;
-	public GameKeyStates gameKeyState;
+	KeyStatePack keyStates;
+	@serializationIgnore
+	CharFrame frame;
+	@serializationKeys(frame.stringof)
+	int index;
 }
 
-public enum KeyState : byte
+enum KeyState : byte
 {
-	Any,
-	Pressed,
 	Released,
+	Pressed,
 	Down,
 	Up
 }
 
-public final class Timer
-{
-	union
-	{
-		@serializationIgnore
-		public Frame frame;
-		public int index;
-	}
-	public int interval;
-	//public State[] permittedStates;
-}
-
-public enum VectorHint : byte
+enum Operation : byte
 {
 	Addition,
-	Assignment,
+	Substraction,
 	Multiply,
+	Divide,
+	Assignment,
 }
 
-public enum State : byte
+enum State : byte
 {
 	// Char States
 	Standing,

@@ -1,4 +1,4 @@
-module lbf.graphics;
+module lbf.graphics.vulkan;
 
 debug import std.stdio;
 import std.file;
@@ -616,7 +616,7 @@ public final class Vulkan
 		];
 		debug enabledInstanceLayers ~= [
 			// Additional debug layers
-			//"VK_LAYER_KHRONOS_validation",
+			"VK_LAYER_KHRONOS_validation",
 		];
 		
 		VkInstanceCreateInfo instanceInfo = {
@@ -1115,15 +1115,6 @@ public final class Vulkan
 }
 
 //region Error handling
-class GraphicsException : Exception
-{
-	public this(string msg, string file = __FILE__, size_t line = __LINE__, Throwable next = null)
-		@nogc @safe pure nothrow
-	{
-		super(msg, file, line, next);
-	}
-}
-
 class VulkanException : GraphicsException
 {
 	public this(string msg, string file = __FILE__, size_t line = __LINE__, Throwable next = null)
