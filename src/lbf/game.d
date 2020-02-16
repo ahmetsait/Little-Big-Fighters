@@ -106,7 +106,10 @@ private:
 		SDL_SetEventFilter(&eventWatcher, cast(void*)this);
 		
 		import std.file : read, readText;
-		shader = new Shader(readText("data/shaders/shader.vert.glsl"), readText("data/shaders/shader.frag.glsl"));
+		shader = new Shader(
+			readText("data/shaders/shader.vert.glsl"),
+			readText("data/shaders/shader.frag.glsl"));
+		debug writeln("Compiled & created shaders.");
 		
 		// Create an empty VAO
 		glGenVertexArrays(1, &vao);
@@ -152,12 +155,12 @@ private:
 			debug
 			{
 				// Diagnostics
-				writeln("========================================");
+				writeln("============================================================");
 				writeln("Renderer: ", glGetString(GL_RENDERER).fromStringz());
+				writeln("Vendor: ", glGetString(GL_VENDOR).fromStringz());
 				writeln("OpenGL Version: ", glGetString(GL_VERSION).fromStringz());
 				writeln("GLSL Version: ", glGetString(GL_SHADING_LANGUAGE_VERSION).fromStringz());
-				writeln("Vendor: ", glGetString(GL_VENDOR).fromStringz());
-				writeln("----------------------------------------");
+				writeln("------------------------------------------------------------");
 				
 				if (GL_KHR_debug)
 					glDebugMessageCallbackKHR(&debugCallback, null);
@@ -421,9 +424,11 @@ private:
 					shader.setUniform("focus", vec2i(0, 0));
 					shader.setUniform("position", position);
 					shader.setUniform("offset", display.offset);
+					shader.setUniform("facing", chr.facing);
 					shader.setUniform("rotation", display.rotation);
 					shader.setUniform("tex", 0);
 					shader.setUniform("color", display.color);
+					shader.setUniform("texInfluence", 1f);
 					glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 				}
 			}

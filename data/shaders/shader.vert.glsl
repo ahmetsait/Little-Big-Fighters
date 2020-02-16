@@ -10,12 +10,14 @@ uniform ivec2 focus;
 
 uniform ivec2 position;
 uniform ivec2 offset;
+uniform float facing; // -1 or 1
 uniform float rotation = 0;
 uniform vec2 scale = vec2(1, 1);
 
 uniform sampler2D tex;
 out vec2 texCoord;
 uniform vec4 color;
+uniform float texInfluence;
 
 float map(float value, float srcMin, float srcMax, float dstMin, float dstMax)
 {
@@ -39,5 +41,17 @@ void main()
 {
 	vec2 pos = vertices[gl_VertexID];
 	texCoord = texCoords[gl_VertexID];
-	gl_Position = vec4(map(rotate(pos - offset, rotation) * scale + position + vec2(- focus + view / 2), vec2(0, 0), view, vec2(-1, -1), vec2(1, 1)), 0.0, 1.0);
+	gl_Position = vec4(
+		map(
+			rotate(
+				pos * vec2(facing, 1) - offset, rotation
+			) * scale + position + vec2(-focus + view / 2),
+			vec2(0, 0),
+			view,
+			vec2(-1, -1),
+			vec2(1, 1)
+		),
+		0.0,
+		1.0
+	);
 }
