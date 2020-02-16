@@ -10,6 +10,7 @@
 	"targetType": "executable",
 	"targetPath": "bin/$BUILD_TYPE-$PLATFORM-$ARCH",
 	"targetName": "lbf",
+	"workingDirectory": "bin/$BUILD_TYPE-$ARCH",
 	"dependencies": {
 		"erupted": "~>2.0.50",
 		"bindbc-sdl": "~>0.13.0",
@@ -20,18 +21,17 @@
 		"gfm:math": "~>8.0.2",
 		"asdf": "~>0.5.3",
 	},
-	"copyFiles" : ["data"],
-	"copyFiles-windows-x86" : ["lib/*.dll"],
-	"copyFiles-windows-x86_64" : ["lib64/*.dll"],
+	"copyFiles": ["data"],
+	"copyFiles-windows": ["lbf.exe.manifest"],
+	"copyFiles-windows-x86": ["lib/*.dll"],
+	"copyFiles-windows-x86_64": ["lib64/*.dll"],
 	"versions": [
-		"SDL_2010",
-		"FT_210",
-		"FI_318",
+		"SDL_208",
+		"FI_317",
 		"BindFI_Dynamic",
-		"HB_1_7_2",
 		"HB_with_freetype",
 	],
-	"configurations" : [
+	"configurations": [
 		{
 			"name": "debug",
 		},
