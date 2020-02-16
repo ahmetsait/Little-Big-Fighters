@@ -50,10 +50,10 @@ public final class Texture
 			glGenerateMipmap(GL_TEXTURE_2D);
 	}
 	
-	private static GLenum active = GL_TEXTURE0;
-	private static uint bound = 0;
 	public void bind(GLenum target = GL_TEXTURE0)
 	{
+		static GLenum active = GL_TEXTURE0;
+		static uint bound = 0;
 		if (target != active || id != bound)
 		{
 			glActiveTexture(active = target);
