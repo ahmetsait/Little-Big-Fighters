@@ -1,3 +1,4 @@
+//TODO: unittest
 module lbf.math.size;
 
 import std.traits : isNumeric;
@@ -48,14 +49,24 @@ public struct Size(T) if(isNumeric!T)
 	}
 
 	///Returns a Size instance equal to (0, 0).
-	public static const Size empty = Size();
+	public static const Size!T empty = Size!T();
 
 	///Returns a Size instance equal to (0, 0).
-	public static const Size zero = Size();
+	public static const Size!T zero = Size!T();
 	
-	auto opBinary(string op, R)(R scalar) if(isNumeric!R)
+	public auto opBinary(string op, R)(R scalar) if(isNumeric!R)
 	{
-		static if (op == "*")
+		static if (op == "+")
+		{
+			alias F = typeof(width + scalar);
+			return Size!F(width + scalar, height + scalar);
+		}
+		else static if (op == "-")
+		{
+			alias F = typeof(width - scalar);
+			return Size!F(width - scalar, height - scalar);
+		}
+		else static if (op == "*")
 		{
 			alias F = typeof(width * scalar);
 			return Size!F(width * scalar, height * scalar);
@@ -69,38 +80,65 @@ public struct Size(T) if(isNumeric!T)
 			static assert(0, "Operator " ~ op ~ " not implemented");
 	}
 	
-	Size opBinary(string op)(Size rhs)
+	public auto opBinary(string op, R)(Size!R size)
 	{
 		static if (op == "+")
 		{
-			alias F = typeof(x + rhs.width);
-			return Size!T(x + rhs.width, y + rhs.height);
+			alias F = typeof(x + size.width);
+			return Size!F(x + size.width, y + size.height);
 		}
 		else static if (op == "-")
 		{
-			alias F = typeof(x - rhs.width);
-			return Size!F(x - rhs.width, y - rhs.height);
+			alias F = typeof(x - size.width);
+			return Size!F(x - size.width, y - size.height);
+		}
+		else static if (op == "*")
+		{
+			alias F = typeof(x * size.width);
+			return Size!F(x * size.width, y * size.height);
+		}
+		else static if (op == "/")
+		{
+			alias F = typeof(x / size.width);
+			return Size!F(x / size.width, y / size.height);
 		}
 		else
 			static assert(0, "Operator " ~ op ~ " not implemented");
 	}
 	
-	auto opBinary(string op, R)(Point!R point) if(isNumeric!R)
+	public auto opBinary(string op, R)(Point!R point)
 	{
 		static if (op == "+")
 		{
 			alias F = typeof(x + point.x);
-			return Point!F(x + point.x, y + point.y);
+			return Size!F(x + point.x, y + point.y);
 		}
 		else static if (op == "-")
 		{
 			alias F = typeof(x - point.x);
-			return Point!F(x - point.x, y - point.y);
+			return Size!F(x - point.x, y - point.y);
+		}
+		else static if (op == "*")
+		{
+			alias F = typeof(x * point.x);
+			return Size!F(x * point.x, y * point.y);
+		}
+		else static if (op == "/")
+		{
+			alias F = typeof(x / point.x);
+			return Size!F(x / point.x, y / point.y);
 		}
 		else
 			static assert(0, "Operator " ~ op ~ " not implemented");
 	}
-
+	
+	version(Have_gfm_math) public auto opBinary(string op, R)(vec2!R vector) if(isNumeric!R)
+	{
+		enum string expr = v.stringof ~ op ~ vector.stringof;
+		alias F = typeof(mixin(expr));
+		return Size!F(mixin(expr));
+	}
+	
 	///Indicates whether this instance is equal to the specified Size.
 	public bool opEquals(Size other)
 	{
