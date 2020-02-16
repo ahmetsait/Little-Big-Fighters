@@ -92,16 +92,7 @@ public struct Rectangle(T) if(isNumeric!T)
 	public Rectangle!T normalized()
 	{
 		Rectangle!T newSize = this;
-		if(newSize.width < 0)
-		{
-			newSize.x += newSize.width;
-			newSize.width = -newSize.width;
-		}
-		if(newSize.height < 0)
-		{
-			newSize.y += newSize.height;
-			newSize.height = -newSize.height;
-		}
+		newSize.normalize();
 		return newSize;
 	}
 	
@@ -181,7 +172,7 @@ public struct Rectangle(T) if(isNumeric!T)
 	///	rect	= The Rectangle to test.
 	public bool contains(Rectangle!T rect)
 	{
-		return contains(rect.location) && contains(rect.location + rect.size);
+		return this.left <= rect.left && this.right > rect.right && this.top <= rect.top && this.bottom > rect.bottom;
 	}
 	
 	///Union the specified rectangle 'a' and 'b'.
@@ -209,7 +200,11 @@ public struct Rectangle(T) if(isNumeric!T)
 	{
 		import std.algorithm.comparison : min, max;
 		
-		return Rectangle!T.fromLTRB(max(a.left, b.left), max(a.top, b.top), min(a.right, b.right), min(a.bottom, b.bottom));
+		return Rectangle!T.fromLTRB(
+			max(a.left, b.left),
+			max(a.top, b.top),
+			min(a.right, b.right),
+			min(a.bottom, b.bottom));
 	}
 	
 	///Indicates whether this instance is equal to the specified Rectangle.

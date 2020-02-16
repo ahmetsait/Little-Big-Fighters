@@ -51,23 +51,7 @@ public struct Point(T) if(isNumeric!T)
 	///Returns the Point (0, 0).
 	public static const Point!T empty = Point!T();
 	
-	auto opBinary(string op, R)(Point!R point) if(isNumeric!R)
-	{
-		static if (op == "+")
-		{
-			alias F = typeof(x + point.x);
-			return Point!F(x + point.x, y + point.y);
-		}
-		else static if (op == "-")
-		{
-			alias F = typeof(x - point.x);
-			return Point!F(x - point.x, y - point.y);
-		}
-		else
-			static assert(0, "Operator " ~ op ~ " not implemented");
-	}
-	
-	auto opBinary(string op, R)(R scalar) if(isNumeric!R)
+	public auto opBinary(string op, R)(R scalar) if(isNumeric!R)
 	{
 		static if (op == "*")
 		{
@@ -83,20 +67,63 @@ public struct Point(T) if(isNumeric!T)
 			static assert(0, "Operator " ~ op ~ " not implemented");
 	}
 	
-	auto opBinary(string op, R)(Size!R size) if(isNumeric!R)
+	public auto opBinary(string op, R)(Point!R point) if(isNumeric!R)
+	{
+		static if (op == "+")
+		{
+			alias F = typeof(x + point.x);
+			return Point!F(x + point.x, y + point.y);
+		}
+		else static if (op == "-")
+		{
+			alias F = typeof(x - point.x);
+			return Point!F(x - point.x, y - point.y);
+		}
+		else static if (op == "*")
+		{
+			alias F = typeof(x * point.x);
+			return Point!F(x * point.x, y * point.y);
+		}
+		else static if (op == "/")
+		{
+			alias F = typeof(x / point.x);
+			return Point!F(x / point.x, y / point.y);
+		}
+		else
+			static assert(0, "Operator " ~ op ~ " not implemented");
+	}
+	
+	public auto opBinary(string op, R)(Size!R size) if(isNumeric!R)
 	{
 		static if (op == "+")
 		{
 			alias F = typeof(x + size.width);
-			return Point!T(x + size.width, y + size.height);
+			return Point!F(x + size.width, y + size.height);
 		}
 		else static if (op == "-")
 		{
 			alias F = typeof(x - size.width);
-			return Point!T(x - size.width, y - size.height);
+			return Point!F(x - size.width, y - size.height);
+		}
+		else static if (op == "*")
+		{
+			alias F = typeof(x * size.width);
+			return Point!F(x * size.width, y * size.height);
+		}
+		else static if (op == "/")
+		{
+			alias F = typeof(x / size.width);
+			return Point!F(x / size.width, y / size.height);
 		}
 		else
 			static assert(0, "Operator " ~ op ~ " not implemented");
+	}
+	
+	version(Have_gfm_math) public auto opBinary(string op, R)(vec2!R vector) if(isNumeric!R)
+	{
+		enum string expr = v.stringof ~ op ~ vector.stringof;
+		alias F = typeof(mixin(expr));
+		return Point!F(mixin(expr));
 	}
 	
 	///Indicates whether this instance is equal to the specified Point.
