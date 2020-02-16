@@ -6,16 +6,16 @@ import lbf.gamedata;
 import lbf.graphics.opengl;
 import lbf.graphics.opengl.gl;
 
-final class Char
+final class Hero
 {
-	vec3f position;
-	vec3f velocity;
-	byte facing;
+	vec3f position = vec3f(0, 0, 0);
+	vec3f velocity = vec3f(0, 0, 0);
+	float facing = 1;
 	
-	CharFrame currentFrame;
+	HeroFrame currentFrame;
 	int currentIndex = 1;
 	
-	CharFrame lastFrame;
+	HeroFrame lastFrame;
 	int lastIndex;
 	
 	bool hitstop;
@@ -33,5 +33,35 @@ final class Char
 	
 	string dataFile;
 	Charge[] charges;
-	CharData data;
+	HeroData data;
+}
+
+final class Weapon	
+{
+	this()
+	{
+		
+	}
+	
+	vec3f position = vec3f(0, 0, 0);
+	vec3f velocity = vec3f(0, 0, 0);
+	float facing = 1;
+	
+	HeroFrame currentFrame;
+	int currentIndex = 1;
+	
+	HeroFrame lastFrame;
+	int lastIndex;
+	
+	bool hitstop;
+	ubyte team;
+	Hero owner;
+	
+	KeyStatePack keyStates;
+	
+	Charge* hp;
+	
+	string dataFile;
+	Charge[] charges;
+	WeaponData data;
 }

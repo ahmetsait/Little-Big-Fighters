@@ -12,130 +12,168 @@ import lbf.core;
 
 public immutable appName = "Little Big Fighters";
 
-version(WinMain)
+version(LF2LBF)
 {
-	import std.utf : toUTF16z, toUTF8;
-	import core.runtime : Runtime;
-	import core.sys.windows.shellapi : CommandLineToArgvW;
-	import core.sys.windows.winbase : GetCommandLineW, LocalFree;
-	import core.sys.windows.windef : LPSTR, HINSTANCE;
-	import core.sys.windows.winuser : MessageBoxW, MB_OK, MB_ICONEXCLAMATION;
-	pragma(lib, "user32");
-	extern (Windows) int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+	int main(string[] args)
 	{
-		if (!Runtime.initialize())
-			return 1;
+		import std.file;
+		import asdf.serialization;
+		import lbf.gamedata;
+		import lf2;
+		import lf2lbf;
 		
-		try
-		{
-			int argc;
-			wchar** argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-			scope(exit) LocalFree(argv);
-			{
-				string[] args = new string[argc];
-				for (size_t i = 0; i < argc; i++)
-					args[i] = fromStringz(argv[i]).toUTF8();
-				return Main(args);
-			}
-		}
-		catch (Throwable ex)
-		{
-			MessageBoxW(null, ex.toString().toUTF16z(), "Error", MB_OK | MB_ICONEXCLAMATION);
-			return 1;
-		}
-		finally
-		{
-			Runtime.terminate();
-		}
+		//Token[] datTxtTokens = parseData(readText(r"D:\Games\LF2\data\data.txt"));
+		Token[] stageTokens = parseData(cast(char[])decryptData(cast(ubyte[])read(r"D:\Games\LF2\data\stage.dat")));
+		Token[] chTokens = parseData(cast(char[])decryptData(cast(ubyte[])read(r"D:\Games\LF2\data\davis.dat")));
+		Token[] weaponTokens = parseData(cast(char[])decryptData(cast(ubyte[])read(r"D:\Games\LF2\data\weapon0.dat")));
+		Token[] bgTokens = parseData(cast(char[])decryptData(cast(ubyte[])read(r"D:\Games\LF2\bg\sys\qi\bg.dat")));
+		
+		sStageFile stage;
+		deserializeData(stageTokens, stage);
+		//writeln(serializeToJsonPretty(stage));
+		std.file.write("stage.json", serializeToJsonPretty(stage));
+		
+		sDataFile ch;
+		deserializeData(chTokens, ch);
+		//writeln(serializeToJsonPretty(ch));
+		std.file.write("davis.json", serializeToJsonPretty(ch));
+		
+		sDataFile weapon;
+		deserializeData(weaponTokens, weapon);
+		//writeln(serializeToJsonPretty(weapon));
+		std.file.write("weapon0.json", serializeToJsonPretty(weapon));
+		
+		sBackgroundFile bg;
+		deserializeData(bgTokens, bg);
+		//writeln(serializeToJsonPretty(bg));
+		std.file.write("qi.json", serializeToJsonPretty(bg));
+		
+		return 0;
 	}
 }
 else
-int main(string[] args)
 {
-	return Main(args);
-}
-
-int Main(string[] args)
-{
-	foreach (arg; args)
-		writeln(arg);
-	
-	//region Load
-	debug write("Loading SDL... ");
-	if (loadSDL() < SDLSupport.sdl2010)
+	version(WinMain)
 	{
-		writeln("Failed to load SDL library.");
-		return 1;
+		import std.utf : toUTF16z, toUTF8;
+		import core.runtime : Runtime;
+		import core.sys.windows.shellapi : CommandLineToArgvW;
+		import core.sys.windows.winbase : GetCommandLineW, LocalFree;
+		import core.sys.windows.windef : LPSTR, HINSTANCE;
+		import core.sys.windows.winuser : MessageBoxW, MB_OK, MB_ICONEXCLAMATION;
+		pragma(lib, "user32");
+		extern (Windows) int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+		{
+			if (!Runtime.initialize())
+				return 1;
+			
+			try
+			{
+				int argc;
+				wchar** argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+				scope(exit) LocalFree(argv);
+				{
+					string[] args = new string[argc];
+					for (size_t i = 0; i < argc; i++)
+						args[i] = fromStringz(argv[i]).toUTF8();
+					return Main(args);
+				}
+			}
+			catch (Throwable ex)
+			{
+				MessageBoxW(null, ex.toString().toUTF16z(), "Error", MB_OK | MB_ICONEXCLAMATION);
+				return 1;
+			}
+			finally
+			{
+				Runtime.terminate();
+			}
+		}
 	}
-	debug writeln("Done.");
-	
-	import bindbc.freeimage.types;
-	import bindbc.freeimage.binddynamic;
-	
-	debug write("Loading FreeImage... ");
-	if (loadFreeImage() < FISupport.fi318)
+	else
 	{
-		writeln("Failed to load FreeImage library.");
-		return 1;
-	}
-	debug writeln("Done.");
-	
-	//import bindbc.freetype.config;
-	//import bindbc.freetype.dynload;
-	//
-	//debug write("Loading FreeType... ");
-	//FTSupport ft = loadFreeType();
-	//if (ft != ftSupport)
-	//{
-	//	if (ft == FTSupport.noLibrary)
-	//		writeln("Cannot find FreeType library.");
-	//	else if (ft == FTSupport.badLibrary)
-	//		writeln("FreeType library.");
-	//	return 1;
-	//}
-	//debug writeln("Done.");
-	
-	//import bindbc.hb.config;
-	//import bindbc.hb.dynload;
-	//
-	//debug write("Loading HarfBuzz... ");
-	//if (loadHarfBuzz() < HBSupport.v1_7_2)
-	//{
-	//	writeln("Failed to load HarfBuzz library.");
-	//	return 1;
-	//}
-	//debug writeln("Done.");
-	
-	//import erupted;
-	//import loader = erupted.vulkan_lib_loader;
-	//
-	//debug write("Loading Vulkan... ");
-	//typeof(vkGetInstanceProcAddr) vkLoad;
-	//if (loader.loadVulkanLib() == false ||
-	//	(vkLoad = loader.loadGetInstanceProcAddr()) == null)
-	//{
-	//	writeln("Failed to load Vulkan library.");
-	//	return 1;
-	//}
-	//loadGlobalLevelFunctions(vkLoad);
-	//debug writeln("Done...");
-	//endregion
-	
-	{
-		import lbf.game;
-		Game game = new Game();
-		scope(exit) destroy(game);
-		game.run();
+		int main(string[] args)
+		{
+			return Main(args);
+		}
 	}
 	
-	import asdf;
-	import lbf.gamedata;
-	import std.file : write;
-	auto ch = new CharData();
-	write("kek.json", serializeToJsonPretty(ch));
-	
-	SDL_Quit();
-	debug writeln("Terminated SDL library.");
-	
-	return 0;
+	int Main(string[] args)
+	{
+		foreach (arg; args)
+			writeln(arg);
+		
+		//region Load
+		debug write("Loading SDL... ");
+		if (loadSDL() < SDLSupport.sdl208)
+		{
+			writeln("Failed to load SDL library.");
+			return 1;
+		}
+		debug writeln("Done.");
+		
+		import bindbc.freeimage.types;
+		import bindbc.freeimage.binddynamic;
+		
+		debug write("Loading FreeImage... ");
+		if (loadFreeImage() < FISupport.fi317)
+		{
+			writeln("Failed to load FreeImage library.");
+			return 1;
+		}
+		debug writeln("Done.");
+		
+		//import bindbc.freetype.config;
+		//import bindbc.freetype.dynload;
+		//
+		//debug write("Loading FreeType... ");
+		//FTSupport ft = loadFreeType();
+		//if (ft != ftSupport)
+		//{
+		//	if (ft == FTSupport.noLibrary)
+		//		writeln("Cannot find FreeType library.");
+		//	else if (ft == FTSupport.badLibrary)
+		//		writeln("FreeType library.");
+		//	return 1;
+		//}
+		//debug writeln("Done.");
+		
+		//import bindbc.hb.config;
+		//import bindbc.hb.dynload;
+		//
+		//debug write("Loading HarfBuzz... ");
+		//if (loadHarfBuzz() < HBSupport.v1_7_2)
+		//{
+		//	writeln("Failed to load HarfBuzz library.");
+		//	return 1;
+		//}
+		//debug writeln("Done.");
+		
+		//import erupted;
+		//import loader = erupted.vulkan_lib_loader;
+		//
+		//debug write("Loading Vulkan... ");
+		//typeof(vkGetInstanceProcAddr) vkLoad;
+		//if (loader.loadVulkanLib() == false ||
+		//	(vkLoad = loader.loadGetInstanceProcAddr()) == null)
+		//{
+		//	writeln("Failed to load Vulkan library.");
+		//	return 1;
+		//}
+		//loadGlobalLevelFunctions(vkLoad);
+		//debug writeln("Done...");
+		//endregion
+		
+		{
+			import lbf.game;
+			Game game = new Game();
+			scope(exit) destroy(game);
+			game.run();
+		}
+		
+		SDL_Quit();
+		debug writeln("Terminated SDL library.");
+		
+		return 0;
+	}
 }

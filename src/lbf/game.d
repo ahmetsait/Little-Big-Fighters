@@ -1,10 +1,12 @@
 module lbf.game;
 
 import std.stdio;
+import std.string : chop;
+import std.conv : to;
+import std.random;
 import std.format : format;
 import std.string : fromStringz, toStringz;
 import std.math;
-
 import std.datetime.stopwatch;
 import core.thread;
 
@@ -19,6 +21,8 @@ import bindbc.sdl.bind.sdlhints;
 import bindbc.freeimage.types;
 import bindbc.freeimage.binddynamic;
 
+import asdf.serialization;
+
 import app;
 import lbf.core;
 import lbf.math;
@@ -28,7 +32,7 @@ import lbf.graphics.opengl.gl.all;
 import lbf.graphics.opengl;
 import lbf.gamedata;
 import lbf.gameobject;
-import lbf.match;
+import lbf.gamestate;
 
 import gfm.math.vector;
 
@@ -96,7 +100,7 @@ private:
 		
 		window = SDL_CreateWindow(appName.ptr,
 			SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height,
-			SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN)
+			SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN)
 			.enforceSDLNotNull("Cannot create SDL window.");
 		debug writeln("Created SDL window.");
 		
@@ -111,11 +115,34 @@ private:
 			readText("data/shaders/shader.frag.glsl"));
 		debug writeln("Compiled & created shaders.");
 		
-		// Create an empty VAO
 		glGenVertexArrays(1, &vao);
 		glBindVertexArray(vao);
+		debug writeln("Created empty vao.");
+		
+		dataFiles = deserialize!DataFiles(readText("data/data.json"));
+		debug writeln("Read `data/data.json`.");
+		
+		foreach (key, file; dataFiles.heroFiles)
+		{
+			dataFiles.heroes[key] = deserialize!HeroData(readText(file));
+			debug writefln("Deserialized character: %s : \"%s\"", key, file);
+		}
+		
+		foreach (key, file; dataFiles.mapFiles)
+		{
+			dataFiles.maps[key] = deserialize!MapData(readText(file));
+			debug writefln("Deserialized map: %s : \"%s\"", key, file);
+		}
+		
+		writeln("Choose character: ");
+		string hero = readln().chop();
+		Hero h = new Hero();
+		h.data = dataFiles.heroes[hero];
 		
 	}
+	
+	DataFiles dataFiles;
+	Object[] objects;
 	
 	~this()
 	{
@@ -132,6 +159,7 @@ private:
 	
 	Shader shader;
 	uint vao;
+	Texture tex;
 	
 	SDL_GLContext glContext;
 	bool _glDebugEnabled = false;
@@ -146,6 +174,7 @@ private:
 		{
 			glContext = SDL_GL_CreateContext(window)
 				.enforceSDLNotNull("OpenGL context could not be created");
+			debug writeln("Created OpenGL context.");
 			
 			debug write("Loading OpenGL... ");
 			if (!loadGL())
@@ -394,9 +423,9 @@ private:
 		{
 			shader.use();
 			
-			if (is(obj == Char))
+			if (is(obj == Hero))
 			{
-				Char chr = cast(Char)obj;
+				Hero chr = cast(Hero)obj;
 				foreach (display; chr.currentFrame.pics)
 				{
 					Dimension dim = chr.data.dimensions[display.index];

@@ -43,5 +43,12 @@
 				"WinMain",
 			],
 		},
+		{
+			"name": "lf2lbf",
+			"targetName": "lf2lbf",
+			"versions": [
+				"LF2LBF",
+			]
+		},
 	]
 }
