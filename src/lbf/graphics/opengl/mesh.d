@@ -113,9 +113,9 @@ public final class Mesh(V, I = uint)
 		return true;
 	}
 	
-	static uint bound = 0;
 	public void bind()
 	{
+		static uint bound = 0;
 		if (bound != vao)
 			glBindVertexArray(bound = vao);
 	}

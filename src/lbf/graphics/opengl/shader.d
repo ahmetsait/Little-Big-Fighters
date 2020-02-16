@@ -70,9 +70,9 @@ public final class Shader
 		return shader;
 	}
 	
-	static uint used = 0;
 	public void use()
 	{
+		static uint used = 0;
 		if (used != id)
 			glUseProgram(used = id);
 	}
