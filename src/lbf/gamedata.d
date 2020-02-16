@@ -7,7 +7,6 @@ import bindbc.freeimage.types;
 import gfm.math.vector;
 
 import lbf.math;
-import lbf.math.rectangle;
 import lbf.graphics.opengl;
 
 //region Proxies
@@ -175,15 +174,30 @@ struct Dimension
 
 struct DataFiles
 {
-	string[] characterFiles;
-	string[] weaponFiles;
-	string[] energyFiles;
-	string[] particleFiles;
-	string[] mapFiles;
+	string[string] heroFiles;
+	@serializationIgnore
+	HeroData[string] heroes;
+	
+	//string[string] weaponFiles;
+	//@serializationIgnore
+	//WeaponData[string] weapons;
+	//
+	//string[string] energyFiles;
+	//@serializationIgnore
+	//EnergyData[string] energies;
+	//
+	//string[string] particleFiles;
+	//@serializationIgnore
+	//ParticleData[string] particles;
+	
+	string[string] mapFiles;
+	@serializationIgnore
+	MapData[string] maps;
+	
 	string[string] soundFiles;
 }
 
-final class CharData
+final class HeroData
 {
 	string name;
 	
@@ -217,7 +231,7 @@ final class CharData
 	float weight = 1;
 	
 	@serializationIgnore
-	CharFrame injuredFrame;
+	HeroFrame injuredFrame;
 	@serializationKeys(injuredFrame.stringof)
 	int injuredIndex;
 	
@@ -227,17 +241,17 @@ final class CharData
 	//int caughtIndex;
 	
 	@serializationIgnore
-	CharFrame dizzyFrame;
+	HeroFrame dizzyFrame;
 	@serializationKeys(dizzyFrame.stringof)
 	int dizzyIndex;
 	
 	@serializationIgnore
-	CharFrame landingFrame;
+	HeroFrame landingFrame;
 	@serializationKeys(landingFrame.stringof)
 	int landingIndex;
 	
 	@serializationIgnore
-	CharFrame brokenDefenseFrame;
+	HeroFrame brokenDefenseFrame;
 	@serializationKeys(brokenDefenseFrame.stringof)
 	int brokenDefenseIndex;
 	
@@ -247,39 +261,39 @@ final class CharData
 	//int heavyStopIndex;
 	
 	@serializationIgnore
-	CharFrame flyFrontFrame;
+	HeroFrame flyFrontFrame;
 	@serializationKeys(flyFrontFrame.stringof)
 	int flyFrontIndex;
 	
 	@serializationIgnore
-	CharFrame fallFrontFrame;
+	HeroFrame fallFrontFrame;
 	@serializationKeys(fallFrontFrame.stringof)
 	int fallFrontIndex;
 	
 	@serializationIgnore
-	CharFrame flyBackFrame;
+	HeroFrame flyBackFrame;
 	@serializationKeys(flyBackFrame.stringof)
 	int flyBackIndex;
 	
 	@serializationIgnore
-	CharFrame fallBackFrame;
+	HeroFrame fallBackFrame;
 	@serializationKeys(fallBackFrame.stringof)
 	int fallBackIndex;
 	
 	@serializationIgnore
-	CharFrame groundBackFrame;
+	HeroFrame groundBackFrame;
 	@serializationKeys(groundBackFrame.stringof)
 	int groundBackIndex;
 	
 	@serializationIgnore
-	CharFrame groundFrontFrame;
+	HeroFrame groundFrontFrame;
 	@serializationKeys(groundFrontFrame.stringof)
 	int groundFrontIndex;
 	
-	CharFrame[int] frames;
+	HeroFrame[int] frames;
 }
 
-final class CharFrame
+final class HeroFrame
 {
 	string name;
 	Display[] pics;
@@ -294,40 +308,38 @@ final class CharFrame
 	bool dirControl;
 	
 	@serializationIgnore
-	CharFrame nextFrame;
+	HeroFrame nextFrame;
 	@serializationKeys(nextFrame.stringof)
 	int nextIndex;
 	
 	@serializationIgnore
-	CharFrame injuredFrame;
+	HeroFrame injuredFrame;
 	@serializationKeys(injuredFrame.stringof)
 	int injuredIndex;
 	
 	@serializationIgnore
-	CharFrame dizzyFrame;
+	HeroFrame dizzyFrame;
 	@serializationKeys(dizzyFrame.stringof)
 	int dizzyIndex;
 	
 	@serializationIgnore
-	CharFrame landingFrame;
+	HeroFrame landingFrame;
 	@serializationKeys(landingFrame.stringof)
 	int landingIndex;
 	
 	@serializationIgnore
-	CharFrame brokenDefenseFrame;
+	HeroFrame brokenDefenseFrame;
 	@serializationKeys(brokenDefenseFrame.stringof)
 	int brokenDefenseIndex;
 	
 	@serializationIgnore
-	CharFrame stopFrame;
+	HeroFrame stopFrame;
 	@serializationKeys(stopFrame.stringof)
 	int stopIndex;
 	
 	Charger[] chargers;
 	Spawn[] spawns;
-	KeyEvent atk;
-	KeyEvent jmp;
-	KeyEvent def;
+	KeyEvent[] keyEvents;
 }
 
 struct Display
@@ -341,6 +353,64 @@ struct Display
 	vec2f scale = vec2f(1, 1);
 	@serializedAs!colorProxy
 	vec4f color = vec4f(1, 1, 1, 1);
+}
+
+struct Body
+{
+	RectangleI area;
+	float sensitivity = 1;
+	Material material = Material.Flesh;
+	@serializationIgnore
+	HeroFrame hitFrame;
+	@serializationKeys(hitFrame.stringof)
+	int hitIndex;
+	long hitMask;
+}
+
+struct Spawn
+{
+	@serializationIgnore
+	Object obj;
+	string name;
+	@serializedAs!vec3fProxy
+	vec3f position = vec3f(0, 0, 0);
+	@serializedAs!vec3fProxy
+	vec3f velocity = vec3f(0, 0, 0);
+	@serializedAs!vec3fProxy
+	vec3f controlledVelocity;
+}
+
+struct WeaponPoint
+{
+	@serializedAs!vec2iProxy
+	vec2i offset;
+	@serializedAs!vec3fProxy
+	vec3f velocity = vec3f(0, 0, 0);
+	@serializationIgnore
+	WeaponFrame weaponFrame;
+	@serializationKeys(weaponFrame.stringof)
+	int weaponIndex;
+	int attackIndex;
+	bool cover;
+}
+
+final class WeaponData
+{
+	
+}
+
+final class WeaponFrame
+{
+	string name;
+}
+
+enum Material
+{
+	Void,
+	Flesh,
+	Wood,
+	Rock,
+	Metal,
 }
 
 final class MapData
@@ -410,12 +480,12 @@ struct Charge
 	float segment = 0;
 	
 	@serializationIgnore
-	CharFrame chargeZeroFrame;
+	HeroFrame chargeZeroFrame;
 	@serializationKeys(chargeZeroFrame.stringof)
 	int chargeZeroIndex;
 	
 	@serializationIgnore
-	CharFrame chargeFullFrame;
+	HeroFrame chargeFullFrame;
 	@serializationKeys(chargeFullFrame.stringof)
 	int chargeFullIndex;
 }
@@ -431,12 +501,12 @@ struct Charger
 	Operation op;
 	
 	@serializationIgnore
-	CharFrame chargeLowFrame;
+	HeroFrame chargeLowFrame;
 	@serializationKeys(chargeLowFrame.stringof)
 	int chargeLowIndex;
 	
 	@serializationIgnore
-	CharFrame chargeFullFrame;
+	HeroFrame chargeFullFrame;
 	@serializationKeys(chargeFullFrame.stringof)
 	int chargeFullIndex;
 	
@@ -446,33 +516,9 @@ struct Charger
 	bool forceChargeHigh;
 }
 
-struct Spawn
-{
-	@serializationIgnore
-	Object obj;
-	string name;
-	@serializedAs!vec3fProxy
-	vec3f position = vec3f(0, 0, 0);
-	@serializedAs!vec3fProxy
-	vec3f velocity = vec3f(0, 0, 0);
-	@serializedAs!vec3fProxy
-	vec3f controlledVelocity;
-}
-
-struct WeaponPoint
-{
-	@serializedAs!vec2iProxy
-	vec2i offset;
-	float angle = 0;
-	@serializedAs!vec3fProxy
-	vec3f velocity = vec3f(0, 0, 0);
-	int attackIndex;
-	bool cover;
-}
-
 enum ObjectType
 {
-	Char,
+	Hero,
 	Weapon,
 	Energy,
 	Particle,
@@ -493,7 +539,7 @@ struct KeyEvent
 {
 	KeyStatePack keyStates;
 	@serializationIgnore
-	CharFrame frame;
+	HeroFrame frame;
 	@serializationKeys(frame.stringof)
 	int index;
 }
@@ -517,7 +563,7 @@ enum Operation : byte
 
 enum State : byte
 {
-	// Char States
+	// Hero States
 	Standing,
 	Walking,
 	Running,
