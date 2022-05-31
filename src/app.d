@@ -14,6 +14,11 @@ public immutable appName = "Little Big Fighters";
 
 version(LF2LBF)
 {
+	struct CommandLine
+	{
+		string path;
+	}
+	
 	int main(string[] args)
 	{
 		import std.file;
@@ -22,11 +27,16 @@ version(LF2LBF)
 		import lf2;
 		import lf2lbf;
 		
-		//Token[] datTxtTokens = parseData(readText(r"D:\Games\LF2\data\data.txt"));
-		Token[] stageTokens = parseData(cast(char[])decryptData(cast(ubyte[])read(r"D:\Games\LF2\data\stage.dat")));
-		Token[] chTokens = parseData(cast(char[])decryptData(cast(ubyte[])read(r"D:\Games\LF2\data\davis.dat")));
-		Token[] weaponTokens = parseData(cast(char[])decryptData(cast(ubyte[])read(r"D:\Games\LF2\data\weapon0.dat")));
-		Token[] bgTokens = parseData(cast(char[])decryptData(cast(ubyte[])read(r"D:\Games\LF2\bg\sys\qi\bg.dat")));
+		Token[] dataTxtTokens = parseLf2Data(readText(r"D:\Games\LF2\data\data.txt"));
+		Token[] stageTokens = parseLf2Data(decryptLf2Data(cast(ubyte[])read(r"D:\Games\LF2\data\stage.dat")));
+		Token[] chTokens = parseLf2Data(decryptLf2Data(cast(ubyte[])read(r"D:\Games\LF2\data\davis.dat")));
+		Token[] weaponTokens = parseLf2Data(decryptLf2Data(cast(ubyte[])read(r"D:\Games\LF2\data\weapon0.dat")));
+		Token[] bgTokens = parseLf2Data(decryptLf2Data(cast(ubyte[])read(r"D:\Games\LF2\bg\sys\qi\bg.dat")));
+		
+		sDataTxt datatxt;
+		deserializeData(dataTxtTokens, datatxt);
+		//writeln(serializeToJsonPretty(stage));
+		std.file.write("data.json", serializeToJsonPretty(datatxt));
 		
 		sStageFile stage;
 		deserializeData(stageTokens, stage);

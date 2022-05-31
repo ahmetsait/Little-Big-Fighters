@@ -1,4 +1,4 @@
-﻿module lbf.game;
+module lbf.game;
 
 import std.stdio;
 import std.string : chop;

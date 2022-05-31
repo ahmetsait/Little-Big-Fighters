@@ -1,4 +1,4 @@
-﻿module lbf.core;
+module lbf.core;
 
 import std.string : fromStringz, format;
 import std.exception : enforce;
