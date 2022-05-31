@@ -2,9 +2,14 @@ module lf2.encryption;
 
 version(LF2LBF):
 
-const ubyte[] cryptoKey = cast(ubyte[])"SiuHungIsAGoodBearBecauseHeIsVeryGood";
+const char[] lf2CryptoKey = "SiuHungIsAGoodBearBecauseHeIsVeryGood";
 
-ubyte[] decryptData(const(ubyte)[] data, const(ubyte)[] key = cryptoKey, size_t additionalNonsense = 123)
+ubyte[] decryptLf2Data(const(char)[] data, const(char)[] key = lf2CryptoKey, size_t additionalNonsense = 123)
+{
+	return decryptLf2Data(data, key, additionalNonsense);
+}
+
+ubyte[] decryptLf2Data(const(ubyte)[] data, const(ubyte)[] key = cast(ubyte[])lf2CryptoKey, size_t additionalNonsense = 123)
 {
 	if (data.length <= additionalNonsense)
 		return null;
@@ -17,7 +22,12 @@ ubyte[] decryptData(const(ubyte)[] data, const(ubyte)[] key = cryptoKey, size_t 
 	return result;
 }
 
-ubyte[] encryptData(const(ubyte)[] data, const(ubyte)[] key = cryptoKey, size_t additionalNonsense = 123)
+ubyte[] encryptLf2Data(const(char)[] data, const(char)[] key = lf2CryptoKey, size_t additionalNonsense = 123)
+{
+	return encryptLf2Data(data, key, additionalNonsense);
+}
+
+ubyte[] encryptLf2Data(const(ubyte)[] data, const(ubyte)[] key = cast(ubyte[])lf2CryptoKey, size_t additionalNonsense = 123)
 {
 	ubyte[] result = new ubyte[data.length + additionalNonsense];
 	

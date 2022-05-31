@@ -35,12 +35,18 @@ class ParserException : Exception
 
 /// This function tokenizes LF2 data and returns a Token array.
 /// Returned tokens' slices point to the given string.
-Token[] parseData(const(char)[] data) pure
+Token[] parseLf2Data(const(char)[] data) pure
 {
-	//import std.uni : isWhite;
 	import std.string : representation;
-	import std.utf : byCodeUnit;
-	static immutable delimeters = " \r\n\t".representation;
+	return parseLf2Data(data.representation);
+}
+
+/// ditto
+Token[] parseLf2Data(const(ubyte)[] data) pure
+{
+	import std.string : representation;
+	
+	enum delimeters = " \r\n\t".representation;
 	
 	auto slices = appender!(Token[]);
 	
@@ -49,13 +55,13 @@ Token[] parseData(const(char)[] data) pure
 	
 	size_t line = 1, col = 1;
 	
-	foreach(i, ch; data.representation)
+	foreach(i, ch; data)
 	{
 		if (delimeters.canFind(ch))
 		{
 			if (inToken)
 			{
-				slices ~= Token(data[tokenStart .. i], tokenLine, tokenCol);
+				slices ~= Token(cast(char[])data[tokenStart .. i], tokenLine, tokenCol);
 				inToken = false;
 			}
 		}
@@ -79,7 +85,7 @@ Token[] parseData(const(char)[] data) pure
 			col++;
 	}
 	if (inToken)
-		slices ~= Token(data[tokenStart .. $], tokenLine, tokenCol);
+		slices ~= Token(cast(char[])data[tokenStart .. $], tokenLine, tokenCol);
 	
 	return slices[];
 }
@@ -109,10 +115,10 @@ enum DataTxtState
 	Backgrounds,
 }
 
-DataTxt ReadDataTxt(const(char)[] dataTxt)
+sDataTxt ReadDataTxt(const(char)[] dataTxt)
 {
-	Token[] tokens = parseData(dataTxt);
-	DataTxt result;
+	Token[] tokens = parseLf2Data(dataTxt);
+	sDataTxt result;
 	
 	for(size_t i = 0; i < tokens.length; i++)
 	{
@@ -139,7 +145,7 @@ DataTxt ReadDataTxt(const(char)[] dataTxt)
 						case "type:":
 							if (!inObject)
 								continue Lloop1;
-							obj.type = cast(ObjectType)tokens[++i].str.to!int;
+							obj.type = cast(sObjectType)tokens[++i].str.to!int;
 							break;
 						case "file:":
 							if (!inObject)
@@ -159,7 +165,7 @@ DataTxt ReadDataTxt(const(char)[] dataTxt)
 				break;
 			case "<background>":
 				auto bgs = appender(&result.backgrounds);
-				BackgroundInfo bg;
+				sBackgroundInfo bg;
 				bool inBg = false;
 			Lloop2:
 				for(i++; i < tokens.length; i++)
@@ -170,7 +176,7 @@ DataTxt ReadDataTxt(const(char)[] dataTxt)
 							if (inBg)
 							{
 								bgs ~= bg;
-								bg = BackgroundInfo();
+								bg = sBackgroundInfo();
 							}
 							inBg = true;
 							bg.id = tokens[++i].str.to!int;
@@ -303,7 +309,7 @@ size_t deserializeData(T)(const(Token)[] tokens, out T data, int level = 0)
 				{
 					if (compareToken(field, tokenType, tokens[i].str))
 					{
-						__traits(getMember, data, field) = to!type(tokens[++i].str);
+						__traits(getMember, data, field) = tokens[++i].str.to!type;
 						goto Lout;
 					}
 				}

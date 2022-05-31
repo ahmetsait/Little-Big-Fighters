@@ -178,10 +178,10 @@ struct DataFiles
 	@serializationIgnore
 	HeroData[string] heroes;
 	
-	//string[string] weaponFiles;
-	//@serializationIgnore
-	//WeaponData[string] weapons;
-	//
+	string[string] weaponFiles;
+	@serializationIgnore
+	WeaponData[string] weapons;
+	
 	//string[string] energyFiles;
 	//@serializationIgnore
 	//EnergyData[string] energies;
@@ -510,10 +510,10 @@ struct Charger
 	@serializationKeys(chargeFullFrame.stringof)
 	int chargeFullIndex;
 	
-	bool forceUsageLow;
-	bool forceUsageHigh;
-	bool forceChargeLow;
-	bool forceChargeHigh;
+	bool forceUsageLow;	/// Use remaining charge even if it's not enough
+	bool forceUsageHigh;	/// 
+	bool forceChargeLow;	/// 
+	bool forceChargeHigh;	/// 
 }
 
 enum ObjectType
@@ -546,10 +546,11 @@ struct KeyEvent
 
 enum KeyState : byte
 {
-	Released,
-	Pressed,
-	Down,
-	Up
+	Any,	/// Wildcard state that should be ignored
+	Pressed,	/// Pressed in this frame
+	Released,	/// Released in this frame
+	Down,	/// Currently pressed
+	Up	/// Currently released
 }
 
 enum Operation : byte
@@ -559,6 +560,16 @@ enum Operation : byte
 	Multiply,
 	Divide,
 	Assignment,
+}
+
+enum ForceMode : byte
+{
+	Impact,	/// Change velocity of the object, using its mass
+	Assign,	/// Change velocity of the object, ignoring its mass
+	Force,	/// Add a continuous force to the object, using its mass
+	Acceleration,	/// Add a continuous acceleration to the object, ignoring its mass
+	Impulse,	/// Add an instant force impulse to the object, using its mass
+	VelocityChange	/// Add an instant velocity change to the object, ignoring its mass
 }
 
 enum State : byte

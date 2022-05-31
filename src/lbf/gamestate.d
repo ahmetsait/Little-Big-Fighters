@@ -9,3 +9,9 @@ import lbf.gamedata;
 import lbf.gameobject;
 import lbf.graphics.opengl;
 import lbf.graphics.opengl.gl;
+
+struct Match
+{
+	Object[] objects;
+	
+}

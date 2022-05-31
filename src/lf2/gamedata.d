@@ -41,9 +41,6 @@ enum TokenSyntax
 @EndToken("opoint_end:")
 struct sOpoint
 {
-	static const beginToken = getUDAs!(typeof(this), BeginToken)[0];
-	static const endToken = getUDAs!(typeof(this), EndToken)[0];
-	
 	int kind;
 	int x;
 	int y;
@@ -58,9 +55,6 @@ struct sOpoint
 @EndToken("bpoint_end:")
 struct sBpoint
 {
-	static const beginToken = getUDAs!(typeof(this), BeginToken)[0];
-	static const endToken = getUDAs!(typeof(this), EndToken)[0];
-	
 	int x;
 	int y;
 }
@@ -69,9 +63,6 @@ struct sBpoint
 @EndToken("cpoint_end:")
 struct sCpoint
 {
-	static const beginToken = getUDAs!(typeof(this), BeginToken)[0];
-	static const endToken = getUDAs!(typeof(this), EndToken)[0];
-	
 	int kind;
 	int x;
 	int y;
@@ -103,9 +94,6 @@ struct sCpoint
 @EndToken("wpoint_end:")
 struct sWpoint
 {
-	static const beginToken = getUDAs!(typeof(this), BeginToken)[0];
-	static const endToken = getUDAs!(typeof(this), EndToken)[0];
-	
 	int kind;
 	int x;
 	int y;
@@ -121,9 +109,6 @@ struct sWpoint
 @EndToken("itr_end:")
 struct sItr
 {
-	static const beginToken = getUDAs!(typeof(this), BeginToken)[0];
-	static const endToken = getUDAs!(typeof(this), EndToken)[0];
-	
 	int kind;
 	int x;
 	int y;
@@ -146,9 +131,6 @@ struct sItr
 @EndToken("bdy_end:")
 struct sBdy
 {
-	static const beginToken = getUDAs!(typeof(this), BeginToken)[0];
-	static const endToken = getUDAs!(typeof(this), EndToken)[0];
-	
 	int kind;
 	int x;
 	int y;
@@ -160,9 +142,6 @@ struct sBdy
 @EndToken("<frame_end>")
 struct sFrame
 {
-	static const beginToken = getUDAs!(typeof(this), BeginToken)[0];
-	static const endToken = getUDAs!(typeof(this), EndToken)[0];
-	
 	@TokenIndex(0)
 	int id;
 	@TokenIndex(1)
@@ -199,8 +178,6 @@ struct sFrame
 @BeginToken("entry:")
 struct sWeaponStrengthEntry
 {
-	static const beginToken = getUDAs!(typeof(this), BeginToken)[0];
-	
 	@TokenIndex(0)
 	int id;
 	@TokenIndex(1)
@@ -219,9 +196,6 @@ struct sWeaponStrengthEntry
 @EndToken("<weapon_strength_list_end>")
 struct sWeaponStrengthList
 {
-	static const beginToken = getUDAs!(typeof(this), BeginToken)[0];
-	static const endToken = getUDAs!(typeof(this), EndToken)[0];
-	
 	sWeaponStrengthEntry[] entries;
 	
 	static size_t deserialize(const(Token)[] tokens, out sWeaponStrengthList data)
@@ -280,7 +254,7 @@ struct sWeaponStrengthList
 					if (inEntry)
 						entry.injury = tokens[++i].str.to!int;
 					break;
-				case endToken.str:
+				case getUDAs!(typeof(this), EndToken)[0].str:
 					if (inEntry)
 						entries ~= entry;
 					break Lfor;
@@ -296,8 +270,6 @@ struct sWeaponStrengthList
 @BeginToken(`^file\S*$`, true)
 struct sBmpFile
 {
-	static const beginToken = getUDAs!(typeof(this), BeginToken)[0];
-	
 	@TokenIndex(0)
 	string path;
 	int w;
@@ -310,9 +282,6 @@ struct sBmpFile
 @EndToken("<bmp_end>")
 struct sBmp
 {
-	static const beginToken = getUDAs!(typeof(this), BeginToken)[0];
-	static const endToken = getUDAs!(typeof(this), EndToken)[0];
-	
 	string name;
 	string head;
 	string small;
@@ -399,7 +368,7 @@ struct sBmp
 					break Lswitch;
 				}
 				
-				case endToken.str:
+				case getUDAs!(typeof(this), EndToken)[0].str:
 					if (inFile)
 						bmp_files ~= file;
 					break Lfor;
@@ -434,8 +403,6 @@ struct sDataFile
 @BeginToken("id:")
 struct sSpawn
 {
-	static const beginToken = getUDAs!(typeof(this), BeginToken)[0];
-	
 	@TokenIndex(0)
 	int id;
 	int x;
@@ -461,9 +428,6 @@ enum Role
 @EndToken("<phase_end>")
 struct sPhase
 {
-	static const beginToken = getUDAs!(typeof(this), BeginToken)[0];
-	static const endToken = getUDAs!(typeof(this), EndToken)[0];
-	
 	int bound;
 	string music;
 	sSpawn[] spawns;
@@ -553,7 +517,7 @@ struct sPhase
 				case "when_clear_goto_phase:":
 					phase.when_clear_goto_phase = tokens[++i].str.to!int;
 					break;
-				case endToken.str:
+				case getUDAs!(typeof(this), EndToken)[0].str:
 					if (inSpawn)
 						phase_spawns ~= spawn;
 					break Lfor;
@@ -570,9 +534,6 @@ struct sPhase
 @EndToken("<stage_end>")
 struct sStage
 {
-	static const beginToken = getUDAs!(typeof(this), BeginToken)[0];
-	static const endToken = getUDAs!(typeof(this), EndToken)[0];
-	
 	int id;
 	sPhase[] phases;
 }
@@ -586,9 +547,6 @@ struct sStageFile
 @EndToken("layer_end")
 struct sLayer
 {
-	static const beginToken = getUDAs!(typeof(this), BeginToken)[0];
-	static const endToken = getUDAs!(typeof(this), EndToken)[0];
-	
 	@TokenIndex(0)
 	string bmp;
 	int transparency;
@@ -612,22 +570,22 @@ struct sBackgroundFile
 	sLayer[] layers;
 }
 
-enum ObjectType
+enum sObjectType
 {
-	Char = 0,
-	Weapon = 1,
-	HeavyWeapon = 2,
-	SpecialAttack = 3,
-	ThrowWeapon = 4,
-	Criminal = 5,
-	Drink = 6
+	Char	= 0,
+	Weapon	= 1,
+	HeavyWeapon	= 2,
+	SpecialAttack	= 3,
+	ThrowWeapon	= 4,
+	Criminal	= 5,
+	Drink	= 6
 }
 
-enum DataType
+enum sDataType
 {
-	Object = 0,
-	Stage = 1,
-	Background = 2
+	Object	= 0,
+	Stage	= 1,
+	Background	= 2
 }
 
 @BeginToken("id:")
@@ -635,19 +593,19 @@ struct ObjectInfo
 {
 	@TokenIndex(0)
 	int id;
-	ObjectType type;
+	sObjectType type;
 	string file;
 }
 
 @BeginToken("id:")
-struct BackgroundInfo
+struct sBackgroundInfo
 {
 	@TokenIndex(0)
 	int id;
 	string file;
 }
 
-struct DataTxt
+struct sDataTxt
 {
 	@BeginToken("<object>")
 	@EndToken("<object_end>")
@@ -655,5 +613,5 @@ struct DataTxt
 	
 	@BeginToken("<background>")
 	@EndToken("<background_end>")
-	BackgroundInfo[] backgrounds;
+	sBackgroundInfo[] backgrounds;
 }
